@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">BitmapScreenActivity</string>
+
+    <string name="dummy_button">Dummy Button</string>
+    <string name="dummy_content">DUMMY\nCONTENT</string>
+    <string name="SET_TIMER">SET TIMER</string>
+    <string name="SET_IMAGE">SET IMAGE</string>
+    <string name="AUTO_HIDE">AUTO HIDE</string>
+</resources>
