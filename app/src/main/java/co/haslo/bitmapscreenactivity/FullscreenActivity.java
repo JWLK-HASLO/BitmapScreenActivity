@@ -7,6 +7,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
 import android.graphics.Bitmap;
+import android.graphics.Matrix;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -41,16 +42,14 @@ public class FullscreenActivity extends AppCompatActivity {
     Button timerControlButton;
     Button timerClearButton;
     Button setImageButton;
-    ImageView bitmapImage;
-
-    Timer timer;
-    TimerTask timerTask;
+    Button wideViewButton;
 
     Thread timeThread = null;
     Boolean isRunning = true;
 
-
+    ImageView bitmapImage;
     Bitmap bmp;
+    Boolean wideViewTrigger = false;
 
     int colorAccent;
     int colorWhite;
@@ -76,6 +75,7 @@ public class FullscreenActivity extends AppCompatActivity {
         setTimerButton = findViewById(R.id.button_set_timer);
         timerControlButton = findViewById(R.id.button_timer_control);
         timerClearButton = findViewById(R.id.button_timer_clear);
+        wideViewButton = findViewById(R.id.button_wide_view);
         setImageButton = findViewById(R.id.button_set_image);
         bitmapImage = findViewById(R.id.bitmap_view);
 
@@ -84,7 +84,7 @@ public class FullscreenActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
 
-                bmp = Bitmap.createBitmap(640, 480, Bitmap.Config.ARGB_8888);
+                bmp = Bitmap.createBitmap(32, 1024, Bitmap.Config.ARGB_8888);
 
                 if(!isRunning) isRunning = true;
                 timeThread = new Thread(new timeThread());
@@ -96,6 +96,9 @@ public class FullscreenActivity extends AppCompatActivity {
                 timerControlButton.setTextColor(colorWhite);
                 timerClearButton.setEnabled(true);
                 timerClearButton.setTextColor(colorWhite);
+
+                wideViewButton.setEnabled(true);
+                wideViewButton.setTextColor(colorWhite);
             }
         });
 
@@ -126,6 +129,24 @@ public class FullscreenActivity extends AppCompatActivity {
                 timeThread.interrupt();
                 timerView.setText("");
                 timerView.setText("00:00:00:0");
+
+
+                wideViewButton.setEnabled(false);
+                wideViewButton.setTextColor(colorWhiteDark);
+            }
+        });
+
+        wideViewButton.setOnClickListener(new View.OnClickListener() {
+            @SuppressLint("ResourceAsColor")
+            @Override
+            public void onClick(View v) {
+                if(!wideViewTrigger){
+                    wideViewButton.setText("NOW : Wide View");
+                    wideViewTrigger = true;
+                } else {
+                    wideViewButton.setText("NOW : Original View");
+                    wideViewTrigger = false;
+                }
             }
         });
 
@@ -163,7 +184,12 @@ public class FullscreenActivity extends AppCompatActivity {
                 @Override
                 public void run() {
                     timerView.setText(result);
-                    bitmapImage.setImageBitmap(bmp);
+                    Bitmap newBitmap = bmp;
+                    if(wideViewTrigger){
+                        bitmapImage.setImageBitmap(getResizedBitmap(newBitmap,640,480));
+                    } else {
+                        bitmapImage.setImageBitmap(newBitmap);
+                    }
                 }
             });
         }
@@ -173,7 +199,6 @@ public class FullscreenActivity extends AppCompatActivity {
         @Override
         public void run() {
             int i = 0;
-
             while (true) {
                 while (isRunning) { //일시정지를 누르면 멈춤
                     Message msg = new Message();
@@ -181,7 +206,7 @@ public class FullscreenActivity extends AppCompatActivity {
                     handler.sendMessage(msg);
                     setBitmapData();
                     try {
-                        Thread.sleep(1);
+                        Thread.sleep(100);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                         runOnUiThread(new Runnable(){
@@ -198,16 +223,34 @@ public class FullscreenActivity extends AppCompatActivity {
     }
 
 
+    public Bitmap getResizedBitmap(Bitmap bm, int newWidth, int newHeight) {
+        int width = bm.getWidth();
+        int height = bm.getHeight();
+        float scaleWidth = ((float) newWidth) / width;
+        float scaleHeight = ((float) newHeight) / height;
+        // CREATE A MATRIX FOR THE MANIPULATION
+        Matrix matrix = new Matrix();
+        // RESIZE THE BIT MAP
+        matrix.postScale(scaleWidth, scaleHeight);
+
+        // "RECREATE" THE NEW BITMAP
+        Bitmap resizedBitmap = Bitmap.createBitmap(
+                bm, 0, 0, width, height, matrix, false);
+//        bm.recycle();
+        return resizedBitmap;
+    }
+
 
     void setBitmapData() {
-        int col = 640;
-        int row = 480;
+        int col = 32;
+        int row = 1024;
 
         for(int x = 0; x < col; x++){
             for(int y = 0; y < row; y++){
-                bmp.setPixel(x, y, packRGB(viewData, viewData, viewData));
+                bmp.setPixel(x, y, packRGB(7*x, viewData, viewData));
             }
         }
+
         if(viewData>255){
             viewData = 0;
         } else {
@@ -219,6 +262,8 @@ public class FullscreenActivity extends AppCompatActivity {
     private static int packRGB(int r, int g, int b) {
         return 0xff000000 | r << 16 | g << 8 | b;
     }
+
+
 
 
 
