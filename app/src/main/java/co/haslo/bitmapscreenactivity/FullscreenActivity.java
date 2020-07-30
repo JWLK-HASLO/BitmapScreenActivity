@@ -50,6 +50,7 @@ public class FullscreenActivity extends AppCompatActivity {
     ImageView bitmapImage;
     Bitmap bmp;
     Boolean wideViewTrigger = false;
+    Boolean setLoadTrigger = false;
 
     int colorAccent;
     int colorWhite;
@@ -185,10 +186,13 @@ public class FullscreenActivity extends AppCompatActivity {
                 public void run() {
                     timerView.setText(result);
                     Bitmap newBitmap = bmp;
-                    if(wideViewTrigger){
+                    setBitmapData();
+                    if(wideViewTrigger && setLoadTrigger){
                         bitmapImage.setImageBitmap(getResizedBitmap(newBitmap,640,480));
+                        setLoadTrigger = false;
                     } else {
                         bitmapImage.setImageBitmap(newBitmap);
+                        setLoadTrigger = false;
                     }
                 }
             });
@@ -203,8 +207,9 @@ public class FullscreenActivity extends AppCompatActivity {
                 while (isRunning) { //일시정지를 누르면 멈춤
                     Message msg = new Message();
                     msg.arg1 = i++;
+//                    msg.arg2 = frameCounter++;
+                    msg.arg2 = 0;
                     handler.sendMessage(msg);
-                    setBitmapData();
                     try {
                         Thread.sleep(100);
                     } catch (InterruptedException e) {
@@ -257,6 +262,7 @@ public class FullscreenActivity extends AppCompatActivity {
             viewData++;
         }
 
+        setLoadTrigger = true;
     }
 
     private static int packRGB(int r, int g, int b) {
